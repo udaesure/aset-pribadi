@@ -35,8 +35,7 @@
   .summary{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:20px; }
   .sum-card{
     background:var(--card); border:1px solid var(--border); border-radius:14px;
-    padding:18px; position:relative; overflow:hidden;
-    transition:transform .2s;
+    padding:18px; position:relative; overflow:hidden; transition:transform .2s;
   }
   .sum-card:hover{ transform:translateY(-3px); }
   .sum-card::before{ content:''; position:absolute; top:0; left:0; width:4px; height:100%; }
@@ -51,46 +50,69 @@
     background:var(--card); border:1px solid var(--border); border-radius:14px;
     padding:20px; margin-bottom:16px;
   }
-  .section h2{
-    font-size:1rem; margin-bottom:14px; display:flex; align-items:center; gap:8px;
-    color:var(--accent);
-  }
+  .section h2{ font-size:1rem; margin-bottom:14px; display:flex; align-items:center; gap:8px; color:var(--accent); }
   .section h2 span{ font-size:1.2rem; }
 
   .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
   .field{ display:flex; flex-direction:column; gap:4px; }
   .field label{ font-size:.75rem; color:var(--muted); }
-  .field input{
+  .field input, .field select, .field textarea{
     background:var(--card2); border:1px solid var(--border); border-radius:8px;
     padding:10px 12px; color:var(--text); font-size:.9rem; outline:none;
-    transition:border .2s;
+    transition:border .2s; font-family:inherit;
   }
-  .field input:focus{ border-color:var(--accent); }
+  .field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--accent); }
   .field input[type="date"]{ color-scheme:dark; }
 
-  .row-item{ display:grid; grid-template-columns:1fr 1fr 40px; gap:8px; margin-bottom:8px; align-items:end; }
-  .row-item input{ width:100%; background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:10px; color:var(--text); }
-  .btn-del{
-    background:var(--danger); border:none; color:white; border-radius:8px;
-    width:40px; height:42px; cursor:pointer; font-size:1.1rem;
+  .emas-box{
+    background:var(--card2); border:1px dashed var(--accent); border-radius:12px;
+    padding:14px; margin-top:12px;
   }
-  .btn-add{
-    background:var(--card2); border:1px dashed var(--border); color:var(--muted);
-    padding:10px; border-radius:8px; cursor:pointer; width:100%; margin-top:6px;
+  .emas-box h3{ font-size:.85rem; color:var(--accent); margin-bottom:10px; }
+  .emas-total{
+    margin-top:12px; padding:10px; background:rgba(108,140,255,.1);
+    border-radius:8px; text-align:center; font-size:.9rem;
+  }
+  .emas-total strong{ color:var(--accent); font-size:1.1rem; }
+
+  .table-wrap{ overflow-x:auto; margin-top:12px; }
+  table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+  thead{ background:var(--card2); }
+  th, td{ padding:10px 12px; text-align:left; border-bottom:1px solid var(--border); }
+  th{ font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
+  tbody tr:hover{ background:rgba(108,140,255,.05); }
+  td.nama{ font-weight:600; }
+  td.angka{ text-align:right; font-variant-numeric:tabular-nums; }
+
+  .status-pill{
+    display:inline-block; padding:3px 10px; border-radius:20px;
+    font-size:.7rem; font-weight:600;
+  }
+  .status-lunas{ background:rgba(34,197,94,.2); color:#22c55e; }
+  .status-aktif{ background:rgba(245,158,11,.2); color:#f59e0b; }
+  .status-telat{ background:rgba(239,68,68,.2); color:#ef4444; }
+
+  .btn-hist{
+    background:var(--card2); border:1px solid var(--border); color:var(--accent);
+    border-radius:8px; padding:6px 10px; cursor:pointer; font-size:.85rem;
     transition:.2s;
   }
-  .btn-add:hover{ color:var(--accent); border-color:var(--accent); }
+  .btn-hist:hover{ background:var(--accent); color:white; border-color:var(--accent); }
 
-  .actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
   .btn{
     padding:12px 20px; border:none; border-radius:10px; cursor:pointer;
-    font-weight:600; font-size:.9rem; transition:.2s; display:flex; align-items:center; gap:6px;
+    font-weight:600; font-size:.9rem; transition:.2s;
+    display:inline-flex; align-items:center; gap:6px;
   }
   .btn-primary{ background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
   .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 8px 20px rgba(108,140,255,.35); }
   .btn-secondary{ background:var(--card2); color:var(--text); border:1px solid var(--border); }
   .btn-secondary:hover{ border-color:var(--accent); }
   .btn-danger{ background:var(--danger); color:white; }
+  .btn-success{ background:var(--success); color:white; }
+  .btn-sm{ padding:8px 14px; font-size:.8rem; }
+
+  .actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
 
   .history{ max-height:400px; overflow-y:auto; }
   .hist-item{
@@ -108,6 +130,34 @@
   }
   .hist-item button:hover{ color:var(--accent); border-color:var(--accent); }
 
+  /* MODAL */
+  .modal-overlay{
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,.7); z-index:9998;
+    justify-content:center; align-items:center; padding:20px;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal{
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    max-width:600px; width:100%; max-height:90vh; overflow-y:auto;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .modal-header{
+    padding:20px; border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .modal-header h3{ font-size:1.1rem; color:var(--accent); }
+  .modal-close{
+    background:transparent; border:none; color:var(--muted);
+    font-size:1.5rem; cursor:pointer; line-height:1;
+  }
+  .modal-close:hover{ color:var(--danger); }
+  .modal-body{ padding:20px; }
+  .modal-footer{
+    padding:16px 20px; border-top:1px solid var(--border);
+    display:flex; justify-content:flex-end; gap:10px;
+  }
+
   .toast{
     position:fixed; bottom:30px; right:30px; background:var(--success);
     color:white; padding:14px 22px; border-radius:10px;
@@ -122,14 +172,12 @@
 
   @media print{
     body{ background:white; color:black; }
-    .actions, .btn-add, .btn-del, .history, header p{ display:none; }
+    .actions, .btn-hist, .history, header p, .modal-overlay{ display:none !important; }
     .section, .sum-card{ border:1px solid #ccc; background:white; color:black; }
-    .field input{ background:white; color:black; border:1px solid #ccc; }
   }
 </style>
 </head>
-
- <body>
+<body>
 <div class="container">
 
   <header>
@@ -181,10 +229,18 @@
     <div class="grid">
       <div class="field"><label>Saham</label><input type="number" id="saham" placeholder="0"></div>
       <div class="field"><label>Reksadana</label><input type="number" id="reksadana" placeholder="0"></div>
-      <div class="field"><label>Emas (gram)</label><input type="number" id="emas_gram" placeholder="0"></div>
-      <div class="field"><label>Harga Emas / gram</label><input type="number" id="emas_harga" placeholder="1300000"></div>
       <div class="field"><label>Crypto</label><input type="number" id="crypto" placeholder="0"></div>
       <div class="field"><label>Lain-lain</label><input type="number" id="investasi_lain" placeholder="0"></div>
+    </div>
+    <div class="emas-box">
+      <h3>🥇 EMAS</h3>
+      <div class="grid">
+        <div class="field"><label>Jumlah Emas (gram)</label><input type="number" id="emas_gram" placeholder="contoh: 10"></div>
+        <div class="field"><label>Harga per Gram (Rp)</label><input type="number" id="emas_harga" placeholder="contoh: 1300000"></div>
+      </div>
+      <div class="emas-total">
+        Total Emas: <strong id="emas_total">Rp0</strong>
+      </div>
     </div>
   </div>
 
@@ -200,20 +256,64 @@
 
   <div class="section">
     <h2><span>🤝</span> D. Piutang</h2>
-    <div id="piutang-list"></div>
-    <button class="btn-add" onclick="addRow('piutang')">+ Tambah Piutang</button>
+    <button class="btn btn-primary btn-sm" onclick="openTambah('piutang')">+ Tambah Piutang</button>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Total</th>
+            <th>Sisa</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-piutang">
+          <tr><td colspan="5" class="empty">Belum ada data piutang</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <div class="section">
     <h2><span>💳</span> E. Utang</h2>
-    <div id="utang-list"></div>
-    <button class="btn-add" onclick="addRow('utang')">+ Tambah Utang</button>
+    <button class="btn btn-primary btn-sm" onclick="openTambah('utang')">+ Tambah Utang</button>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Total</th>
+            <th>Sisa</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-utang">
+          <tr><td colspan="5" class="empty">Belum ada data utang</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <div class="section">
     <h2><span>📉</span> F. Aset Loss (Catatan Sejarah)</h2>
-    <div id="loss-list"></div>
-    <button class="btn-add" onclick="addRow('loss')">+ Tambah Kerugian</button>
+    <button class="btn btn-primary btn-sm" onclick="openTambah('loss')">+ Tambah Kerugian</button>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Nilai</th>
+            <th>Tanggal</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-loss">
+          <tr><td colspan="4" class="empty">Belum ada data kerugian</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <div class="actions">
@@ -232,10 +332,37 @@
 
 </div>
 
+<!-- MODAL TAMBAH/EDIT -->
+<div class="modal-overlay" id="modal-tambah">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-tambah-title">Tambah Data</h3>
+      <button class="modal-close" onclick="closeModal('modal-tambah')">×</button>
+    </div>
+    <div class="modal-body" id="modal-tambah-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-tambah')">Batal</button>
+      <button class="btn btn-primary" onclick="submitTambah()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HISTORY -->
+<div class="modal-overlay" id="modal-hist">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-hist-title">📜 Riwayat</h3>
+      <button class="modal-close" onclick="closeModal('modal-hist')">×</button>
+    </div>
+    <div class="modal-body" id="modal-hist-body"></div>
+    <div class="modal-footer" id="modal-hist-footer"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast">✅ Tersimpan!</div>
 
 <script type="module">
- /* ========== FIREBASE ========== */
+/* ========== FIREBASE ========== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, update }
   from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
@@ -263,96 +390,27 @@ let state = {
   history: []
 };
 let isOnline = false;
+let editMode = null; // { jenis, index }
 
 /* ========== INIT ========== */
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('tanggal').valueAsDate = new Date();
-  document.querySelectorAll('input').forEach(inp => inp.addEventListener('input', hitung));
-  initDefaultRows();
+  document.querySelectorAll('input[type="number"]').forEach(inp => {
+    inp.addEventListener('input', hitung);
+  });
   listenFirebase();
 });
 
-function initDefaultRows() {
-  ['piutang','utang','loss'].forEach(t => {
-    const list = document.getElementById(`${t}-list`);
-    if (list.children.length === 0) addRow(t);
-  });
-}
-
-/* ========== DYNAMIC ROWS ========== */
-function addRow(type, data = {nama:'', nilai:''}) {
-  const container = document.getElementById(`${type}-list`);
-  const div = document.createElement('div');
-  div.className = 'row-item';
-  div.innerHTML = `
-    <div class="field"><label>Nama</label>
-      <input type="text" class="row-nama" value="${data.nama}" placeholder="Nama..."></div>
-    <div class="field"><label>Nilai (Rp)</label>
-      <input type="number" class="row-nilai" value="${data.nilai}" placeholder="0"></div>
-    <button class="btn-del" onclick="this.parentElement.remove(); hitung();">×</button>
-  `;
-  div.querySelectorAll('input').forEach(i => i.addEventListener('input', hitung));
-  container.appendChild(div);
-  hitung();
-}
-
-function getRows(type) {
-  const rows = [];
-  document.querySelectorAll(`#${type}-list .row-item`).forEach(r => {
-    const nama = r.querySelector('.row-nama').value.trim();
-    const nilai = parseFloat(r.querySelector('.row-nilai').value) || 0;
-    if (nama || nilai) rows.push({nama, nilai});
-  });
-  return rows;
-}
-
-/* ========== HITUNG ========== */
-function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
-
-function hitung() {
-  const A = getNum('konter') + getNum('dana_darurat') + getNum('handbag')
-          + getNum('celengan') + getNum('deposito');
-  const B = getNum('saham') + getNum('reksadana') + getNum('crypto')
-          + getNum('investasi_lain')
-          + (getNum('emas_gram') * (getNum('emas_harga') || 1300000));
-  const C = getNum('tanah') + getNum('motor') + getNum('mobil') + getNum('barang');
-  const D = getRows('piutang').reduce((s,r) => s + r.nilai, 0);
-  const E = getRows('utang').reduce((s,r) => s + r.nilai, 0);
-  const F = getRows('loss').reduce((s,r) => s + r.nilai, 0);
-
-  const sum1 = A + B + D;
-  const sum2 = sum1 - E;
-  const sum3 = sum2 + C + F;
-
-  document.getElementById('sum1').textContent = rupiah(sum1);
-  document.getElementById('sum2').textContent = rupiah(sum2);
-  document.getElementById('sum3').textContent = rupiah(sum3);
-
-  state.fields = {
-    konter:getNum('konter'), dana_darurat:getNum('dana_darurat'),
-    handbag:getNum('handbag'), celengan:getNum('celengan'), deposito:getNum('deposito'),
-    saham:getNum('saham'), reksadana:getNum('reksadana'),
-    emas_gram:getNum('emas_gram'), emas_harga:getNum('emas_harga') || 1300000,
-    crypto:getNum('crypto'), investasi_lain:getNum('investasi_lain'),
-    tanah:getNum('tanah'), motor:getNum('motor'), mobil:getNum('mobil'), barang:getNum('barang')
-  };
-  state.piutang = getRows('piutang');
-  state.utang = getRows('utang');
-  state.loss = getRows('loss');
-  state.sums = { sum1, sum2, sum3, A, B, C, D, E, F };
-}
-
-function rupiah(n) { return 'Rp' + Math.round(n).toLocaleString('id-ID'); }
-
-/* ========== FIREBASE ========== */
+/* ========== FIREBASE LISTEN ========== */
 function listenFirebase() {
-  const dbRef = ref(db, ROOT);
-  onValue(dbRef, (snapshot) => {
+  onValue(ref(db, ROOT), (snapshot) => {
     isOnline = true;
     updateStatus();
     const data = snapshot.val();
     if (data) {
       applyData(data);
+    } else {
+      renderAll();
     }
   }, (error) => {
     isOnline = false;
@@ -368,14 +426,13 @@ function applyData(data) {
       if (el) el.value = v || '';
     });
   }
-  ['piutang','utang','loss'].forEach(t => {
-    document.getElementById(`${t}-list`).innerHTML = '';
-    (data[t] || []).forEach(r => addRow(t, r));
-    if (!data[t] || data[t].length === 0) addRow(t);
-  });
+  state.piutang = data.piutang || [];
+  state.utang = data.utang || [];
+  state.loss = data.loss || [];
   state.history = data.history || [];
   if (data.tanggal) document.getElementById('tanggal').value = data.tanggal;
   hitung();
+  renderAll();
   renderHistory();
 }
 
@@ -390,6 +447,293 @@ function updateStatus() {
     txt.textContent = 'Offline — cek internet';
   }
 }
+
+/* ========== HITUNG ========== */
+function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function hitung() {
+  const A = getNum('konter') + getNum('dana_darurat') + getNum('handbag')
+          + getNum('celengan') + getNum('deposito');
+  const emasGram = getNum('emas_gram');
+  const emasHarga = getNum('emas_harga');
+  const emasTotal = emasGram * emasHarga;
+  document.getElementById('emas_total').textContent = rupiah(emasTotal);
+
+  const B = getNum('saham') + getNum('reksadana') + getNum('crypto')
+          + getNum('investasi_lain') + emasTotal;
+  const C = getNum('tanah') + getNum('motor') + getNum('mobil') + getNum('barang');
+
+  const D = state.piutang.reduce((s, p) => s + hitungSisa(p), 0);
+  const E = state.utang.reduce((s, p) => s + hitungSisa(p), 0);
+  const F = state.loss.reduce((s, l) => s + (parseFloat(l.nilai) || 0), 0);
+
+  const sum1 = A + B + D;
+  const sum2 = sum1 - E;
+  const sum3 = sum2 + C + F;
+
+  document.getElementById('sum1').textContent = rupiah(sum1);
+  document.getElementById('sum2').textContent = rupiah(sum2);
+  document.getElementById('sum3').textContent = rupiah(sum3);
+
+  state.fields = {
+    konter:getNum('konter'), dana_darurat:getNum('dana_darurat'),
+    handbag:getNum('handbag'), celengan:getNum('celengan'), deposito:getNum('deposito'),
+    saham:getNum('saham'), reksadana:getNum('reksadana'),
+    emas_gram:emasGram, emas_harga:emasHarga, emas_total:emasTotal,
+    crypto:getNum('crypto'), investasi_lain:getNum('investasi_lain'),
+    tanah:getNum('tanah'), motor:getNum('motor'), mobil:getNum('mobil'), barang:getNum('barang')
+  };
+  state.sums = { sum1, sum2, sum3, A, B, C, D, E, F };
+}
+
+function hitungSisa(item) {
+  const total = parseFloat(item.total) || 0;
+  const dibayar = (item.pembayaran || []).reduce((s, p) => s + (parseFloat(p.jumlah) || 0), 0);
+  return total - dibayar;
+}
+
+function hitungStatus(item) {
+  const sisa = hitungSisa(item);
+  if (sisa <= 0) return { label:'Lunas', class:'status-lunas' };
+  if (item.jatuhTempo) {
+    const jt = new Date(item.jatuhTempo);
+    if (new Date() > jt) return { label:'Telat', class:'status-telat' };
+  }
+  return { label:'Aktif', class:'status-aktif' };
+}
+
+function rupiah(n) { return 'Rp' + Math.round(n || 0).toLocaleString('id-ID'); }
+
+/* ========== RENDER TABEL ========== */
+function renderAll() {
+  renderPiutangUtang('piutang');
+  renderPiutangUtang('utang');
+  renderLoss();
+}
+
+function renderPiutangUtang(jenis) {
+  const tbody = document.getElementById(`tbody-${jenis}`);
+  const data = state[jenis] || [];
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty">Belum ada data ${jenis}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map((item, i) => {
+    const sisa = hitungSisa(item);
+    const status = hitungStatus(item);
+    return `<tr>
+      <td class="nama">${escapeHtml(item.nama)}</td>
+      <td class="angka">${rupiah(item.total)}</td>
+      <td class="angka">${rupiah(sisa)}</td>
+      <td><span class="status-pill ${status.class}">${status.label}</span></td>
+      <td><button class="btn-hist" onclick="openHist('${jenis}', ${i})">📜</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLoss() {
+  const tbody = document.getElementById('tbody-loss');
+  const data = state.loss || [];
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="empty">Belum ada data kerugian</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map((item, i) => {
+    return `<tr>
+      <td class="nama">${escapeHtml(item.nama)}</td>
+      <td class="angka">${rupiah(item.nilai)}</td>
+      <td>${item.tanggal || '-'}</td>
+      <td><button class="btn-hist" onclick="openHist('loss', ${i})">📜</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ========== MODAL TAMBAH ========== */
+function openTambah(jenis) {
+  editMode = { jenis, index: null };
+  const titles = { piutang:'Tambah Piutang', utang:'Tambah Utang', loss:'Tambah Kerugian' };
+  document.getElementById('modal-tambah-title').textContent = titles[jenis];
+
+  let body = '';
+  if (jenis === 'piutang' || jenis === 'utang') {
+    body = `
+      <div class="field" style="margin-bottom:12px;"><label>Nama</label><input type="text" id="m_nama" placeholder="Nama orang/entitas"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Total (Rp)</label><input type="number" id="m_total" placeholder="0"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Tanggal Dibuat</label><input type="date" id="m_tanggal"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Jatuh Tempo (opsional)</label><input type="date" id="m_jatuhTempo"></div>
+      <div class="field"><label>Keterangan (opsional)</label><textarea id="m_keterangan" rows="2"></textarea></div>
+    `;
+  } else {
+    body = `
+      <div class="field" style="margin-bottom:12px;"><label>Nama Kerugian</label><input type="text" id="m_nama" placeholder="contoh: Bisnis jual beli"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Nilai (Rp)</label><input type="number" id="m_nilai" placeholder="0"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Tanggal</label><input type="date" id="m_tanggal"></div>
+      <div class="field"><label>Keterangan (opsional)</label><textarea id="m_keterangan" rows="2"></textarea></div>
+    `;
+  }
+  document.getElementById('modal-tambah-body').innerHTML = body;
+  document.getElementById('m_tanggal').valueAsDate = new Date();
+  openModal('modal-tambah');
+}
+
+function submitTambah() {
+  const { jenis, index, mode } = editMode;
+
+  // MODE PEMBAYARAN
+  if (mode === 'pembayaran') {
+    const jumlah = parseFloat(document.getElementById('p_jumlah').value) || 0;
+    if (!jumlah) { toast('Jumlah wajib diisi!', 'error'); return; }
+    state[jenis][index].pembayaran = state[jenis][index].pembayaran || [];
+    state[jenis][index].pembayaran.push({
+      tanggal: document.getElementById('p_tanggal').value,
+      jumlah,
+      keterangan: document.getElementById('p_keterangan').value.trim()
+    });
+    closeModal('modal-tambah');
+    renderAll();
+    hitung();
+    simpan();
+    return;
+  }
+
+  // MODE TAMBAH BIASA
+  const nama = document.getElementById('m_nama').value.trim();
+  if (!nama) { toast('Nama wajib diisi!', 'error'); return; }
+
+  if (jenis === 'piutang' || jenis === 'utang') {
+    const total = parseFloat(document.getElementById('m_total').value) || 0;
+    if (!total) { toast('Total wajib diisi!', 'error'); return; }
+    state[jenis].push({
+      nama,
+      total,
+      tanggal: document.getElementById('m_tanggal').value,
+      jatuhTempo: document.getElementById('m_jatuhTempo').value,
+      keterangan: document.getElementById('m_keterangan').value.trim(),
+      pembayaran: []
+    });
+  } else {
+    const nilai = parseFloat(document.getElementById('m_nilai').value) || 0;
+    if (!nilai) { toast('Nilai wajib diisi!', 'error'); return; }
+    state.loss.push({
+      nama,
+      nilai,
+      tanggal: document.getElementById('m_tanggal').value,
+      keterangan: document.getElementById('m_keterangan').value.trim()
+    });
+  }
+
+  closeModal('modal-tambah');
+  renderAll();
+  hitung();
+  simpan();
+}
+
+/* ========== MODAL HISTORY ========== */
+function openHist(jenis, index) {
+  const item = state[jenis][index];
+  const isLoss = jenis === 'loss';
+  const title = isLoss ? `📜 Riwayat — ${item.nama}` : `📜 Riwayat — ${item.nama}`;
+  document.getElementById('modal-hist-title').textContent = title;
+
+  let body = '';
+  if (isLoss) {
+    body = `
+      <div style="margin-bottom:12px;">
+        <div style="font-size:.8rem;color:var(--muted);">Nilai Kerugian</div>
+        <div style="font-size:1.3rem;font-weight:700;">${rupiah(item.nilai)}</div>
+      </div>
+      <div style="font-size:.85rem;">
+        <div><strong>Tanggal:</strong> ${item.tanggal || '-'}</div>
+        <div><strong>Keterangan:</strong> ${escapeHtml(item.keterangan || '-')}</div>
+      </div>
+    `;
+  } else {
+    const sisa = hitungSisa(item);
+    const dibayar = (item.pembayaran || []).reduce((s,p) => s + (parseFloat(p.jumlah)||0), 0);
+    body = `
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div><div style="font-size:.7rem;color:var(--muted);">Total</div><div style="font-weight:700;">${rupiah(item.total)}</div></div>
+        <div><div style="font-size:.7rem;color:var(--muted);">Dibayar</div><div style="font-weight:700;color:var(--success);">${rupiah(dibayar)}</div></div>
+        <div><div style="font-size:.7rem;color:var(--muted);">Sisa</div><div style="font-weight:700;color:var(--warn);">${rupiah(sisa)}</div></div>
+      </div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px;">
+        Dibuat: ${item.tanggal || '-'} ${item.jatuhTempo ? ' · Jatuh tempo: ' + item.jatuhTempo : ''}
+      </div>
+      <table style="font-size:.8rem;">
+        <thead><tr><th>Tanggal</th><th>Jumlah</th><th>Ket.</th><th></th></tr></thead>
+        <tbody>
+          ${(item.pembayaran || []).length === 0 ? '<tr><td colspan="4" class="empty">Belum ada pembayaran</td></tr>' : ''}
+          ${(item.pembayaran || []).map((p, pi) => `
+            <tr>
+              <td>${p.tanggal || '-'}</td>
+              <td>${rupiah(p.jumlah)}</td>
+              <td>${escapeHtml(p.keterangan || '-')}</td>
+              <td><button class="btn-hist" onclick="hapusPembayaran('${jenis}', ${index}, ${pi})" style="color:var(--danger);">🗑️</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+  document.getElementById('modal-hist-body').innerHTML = body;
+
+  let footer = '';
+  if (!isLoss) {
+    footer = `
+      <button class="btn btn-danger btn-sm" onclick="hapusItem('${jenis}', ${index})">🗑️ Hapus ${jenis}</button>
+      <button class="btn btn-success btn-sm" onclick="openCatatPembayaran('${jenis}', ${index})">💰 Catat Pembayaran</button>
+    `;
+  } else {
+    footer = `<button class="btn btn-danger btn-sm" onclick="hapusItem('${jenis}', ${index})">🗑️ Hapus</button>`;
+  }
+  footer += `<button class="btn btn-secondary btn-sm" onclick="closeModal('modal-hist')">Tutup</button>`;
+  document.getElementById('modal-hist-footer').innerHTML = footer;
+  openModal('modal-hist');
+}
+
+function openCatatPembayaran(jenis, index) {
+  const item = state[jenis][index];
+  const sisa = hitungSisa(item);
+  const body = `
+    <div style="margin-bottom:12px;font-size:.85rem;">
+      Sisa saat ini: <strong style="color:var(--warn);">${rupiah(sisa)}</strong>
+    </div>
+    <div class="field" style="margin-bottom:12px;"><label>Tanggal Pembayaran</label><input type="date" id="p_tanggal"></div>
+    <div class="field" style="margin-bottom:12px;"><label>Jumlah (Rp)</label><input type="number" id="p_jumlah" placeholder="0" max="${sisa}"></div>
+    <div class="field"><label>Keterangan (opsional)</label><input type="text" id="p_keterangan" placeholder="contoh: Transfer BCA"></div>
+  `;
+  document.getElementById('modal-tambah-title').textContent = '💰 Catat Pembayaran';
+  document.getElementById('modal-tambah-body').innerHTML = body;
+  document.getElementById('p_tanggal').valueAsDate = new Date();
+  editMode = { jenis, index, mode: 'pembayaran' };
+  openModal('modal-tambah');
+}
+
+function hapusPembayaran(jenis, index, pi) {
+  if (!confirm('Hapus pembayaran ini?')) return;
+  state[jenis][index].pembayaran.splice(pi, 1);
+  renderAll();
+  hitung();
+  simpan();
+  openHist(jenis, index);
+}
+
+function hapusItem(jenis, index) {
+  if (!confirm(`Yakin hapus ${jenis} ini?`)) return;
+  state[jenis].splice(index, 1);
+  closeModal('modal-hist');
+  renderAll();
+  hitung();
+  simpan();
+}
+
+/* ========== MODAL CONTROL ========== */
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
 /* ========== SIMPAN ========== */
 async function simpan() {
@@ -456,12 +800,12 @@ async function restoreHist(i) {
       if (el) el.value = v || '';
     });
   }
-  ['piutang','utang','loss'].forEach(t => {
-    document.getElementById(`${t}-list`).innerHTML = '';
-    (h.data?.[t] || []).forEach(r => addRow(t, r));
-  });
+  state.piutang = h.data?.piutang || [];
+  state.utang = h.data?.utang || [];
+  state.loss = h.data?.loss || [];
   if (h.tanggal) document.getElementById('tanggal').value = h.tanggal;
   hitung();
+  renderAll();
   toast('↺ Snapshot di-restore! Klik Simpan untuk update cloud.', 'info');
 }
 
@@ -514,7 +858,14 @@ function toast(msg, type = '') {
 }
 
 /* ========== EXPOSE GLOBAL ========== */
-window.addRow = addRow;
+window.openTambah = openTambah;
+window.submitTambah = submitTambah;
+window.openHist = openHist;
+window.openCatatPembayaran = openCatatPembayaran;
+window.hapusPembayaran = hapusPembayaran;
+window.hapusItem = hapusItem;
+window.openModal = openModal;
+window.closeModal = closeModal;
 window.simpan = simpan;
 window.exportJSON = exportJSON;
 window.importJSON = importJSON;
