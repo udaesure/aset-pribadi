@@ -84,13 +84,9 @@
   td.nama{ font-weight:600; }
   td.angka{ text-align:right; font-variant-numeric:tabular-nums; }
 
-  .status-pill{
-    display:inline-block; padding:3px 10px; border-radius:20px;
-    font-size:.7rem; font-weight:600;
-  }
+  .status-pill{ display:inline-block; padding:3px 10px; border-radius:20px; font-size:.7rem; font-weight:600; }
   .status-lunas{ background:rgba(34,197,94,.2); color:#22c55e; }
   .status-aktif{ background:rgba(245,158,11,.2); color:#f59e0b; }
-  .status-telat{ background:rgba(239,68,68,.2); color:#ef4444; }
 
   .btn-hist{
     background:var(--card2); border:1px solid var(--border); color:var(--accent);
@@ -141,10 +137,12 @@
     background:var(--card); border:1px solid var(--border); border-radius:16px;
     max-width:600px; width:100%; max-height:90vh; overflow-y:auto;
     box-shadow:0 20px 60px rgba(0,0,0,.5);
+    display:flex; flex-direction:column;
   }
   .modal-header{
     padding:20px; border-bottom:1px solid var(--border);
     display:flex; justify-content:space-between; align-items:center;
+    position:sticky; top:0; background:var(--card); z-index:1;
   }
   .modal-header h3{ font-size:1.1rem; color:var(--accent); }
   .modal-close{
@@ -152,10 +150,12 @@
     font-size:1.5rem; cursor:pointer; line-height:1;
   }
   .modal-close:hover{ color:var(--danger); }
-  .modal-body{ padding:20px; }
+  .modal-body{ padding:20px; flex:1; overflow-y:auto; }
   .modal-footer{
     padding:16px 20px; border-top:1px solid var(--border);
-    display:flex; justify-content:flex-end; gap:10px;
+    display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;
+    position:sticky; bottom:0; background:var(--card);
+    box-shadow:0 -4px 10px rgba(0,0,0,.2);
   }
 
   .toast{
@@ -238,9 +238,7 @@
         <div class="field"><label>Jumlah Emas (gram)</label><input type="number" id="emas_gram" placeholder="contoh: 10"></div>
         <div class="field"><label>Harga per Gram (Rp)</label><input type="number" id="emas_harga" placeholder="contoh: 1300000"></div>
       </div>
-      <div class="emas-total">
-        Total Emas: <strong id="emas_total">Rp0</strong>
-      </div>
+      <div class="emas-total">Total Emas: <strong id="emas_total">Rp0</strong></div>
     </div>
   </div>
 
@@ -259,18 +257,8 @@
     <button class="btn btn-primary btn-sm" onclick="openTambah('piutang')">+ Tambah Piutang</button>
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr>
-            <th>Nama</th>
-            <th>Total</th>
-            <th>Sisa</th>
-            <th>Status</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-piutang">
-          <tr><td colspan="5" class="empty">Belum ada data piutang</td></tr>
-        </tbody>
+        <thead><tr><th>Nama</th><th>Total</th><th>Sisa</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="tbody-piutang"><tr><td colspan="5" class="empty">Belum ada data piutang</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -280,18 +268,8 @@
     <button class="btn btn-primary btn-sm" onclick="openTambah('utang')">+ Tambah Utang</button>
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr>
-            <th>Nama</th>
-            <th>Total</th>
-            <th>Sisa</th>
-            <th>Status</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-utang">
-          <tr><td colspan="5" class="empty">Belum ada data utang</td></tr>
-        </tbody>
+        <thead><tr><th>Nama</th><th>Total</th><th>Sisa</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="tbody-utang"><tr><td colspan="5" class="empty">Belum ada data utang</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -301,17 +279,8 @@
     <button class="btn btn-primary btn-sm" onclick="openTambah('loss')">+ Tambah Kerugian</button>
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr>
-            <th>Nama</th>
-            <th>Nilai</th>
-            <th>Tanggal</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-loss">
-          <tr><td colspan="4" class="empty">Belum ada data kerugian</td></tr>
-        </tbody>
+        <thead><tr><th>Nama</th><th>Nilai</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+        <tbody id="tbody-loss"><tr><td colspan="4" class="empty">Belum ada data kerugian</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -332,7 +301,6 @@
 
 </div>
 
-<!-- MODAL TAMBAH/EDIT -->
 <div class="modal-overlay" id="modal-tambah">
   <div class="modal">
     <div class="modal-header">
@@ -347,7 +315,6 @@
   </div>
 </div>
 
-<!-- MODAL HISTORY -->
 <div class="modal-overlay" id="modal-hist">
   <div class="modal">
     <div class="modal-header">
@@ -362,7 +329,6 @@
 <div class="toast" id="toast">✅ Tersimpan!</div>
 
 <script type="module">
-/* ========== FIREBASE ========== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, update }
   from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
@@ -381,18 +347,10 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const ROOT = 'aset_pribadi';
 
-/* ========== STATE ========== */
-let state = {
-  fields: {},
-  piutang: [],
-  utang: [],
-  loss: [],
-  history: []
-};
+let state = { fields: {}, piutang: [], utang: [], loss: [], history: [] };
 let isOnline = false;
-let editMode = null; // { jenis, index }
+let editMode = null;
 
-/* ========== INIT ========== */
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('tanggal').valueAsDate = new Date();
   document.querySelectorAll('input[type="number"]').forEach(inp => {
@@ -401,17 +359,13 @@ document.addEventListener('DOMContentLoaded', () => {
   listenFirebase();
 });
 
-/* ========== FIREBASE LISTEN ========== */
 function listenFirebase() {
   onValue(ref(db, ROOT), (snapshot) => {
     isOnline = true;
     updateStatus();
     const data = snapshot.val();
-    if (data) {
-      applyData(data);
-    } else {
-      renderAll();
-    }
+    if (data) applyData(data);
+    else renderAll();
   }, (error) => {
     isOnline = false;
     updateStatus();
@@ -426,40 +380,38 @@ function applyData(data) {
       if (el) el.value = v || '';
     });
   }
-  state.piutang = data.piutang || [];
-  state.utang = data.utang || [];
+  state.piutang = migrate(data.piutang || []);
+  state.utang = migrate(data.utang || []);
   state.loss = data.loss || [];
-   // AUTO MIGRATE DATA LAMA
-  ['piutang', 'utang'].forEach(j => {
-    state[j] = (state[j] || []).map(item => {
-      // Kalau udah punya transaksi, skip
-      if (item.transaksi) return item;
-      // Convert dari format lama
-      const trx = [];
-      if (item.total) {
-        trx.push({
-          tanggal: item.tanggal || new Date().toISOString().slice(0,10),
-          jenis: 'utang',
-          jumlah: parseFloat(item.total) || 0,
-          keterangan: 'Migrasi data lama'
-        });
-      }
-      (item.pembayaran || []).forEach(p => {
-        trx.push({
-          tanggal: p.tanggal || new Date().toISOString().slice(0,10),
-          jenis: 'bayar',
-          jumlah: parseFloat(p.jumlah) || 0,
-          keterangan: p.keterangan || 'Migrasi data lama'
-        });
-      });
-      return { nama: item.nama, transaksi: trx };
-    });
-  });
   state.history = data.history || [];
   if (data.tanggal) document.getElementById('tanggal').value = data.tanggal;
   hitung();
   renderAll();
   renderHistory();
+}
+
+function migrate(arr) {
+  return arr.map(item => {
+    if (item.transaksi) return item;
+    const trx = [];
+    if (item.total) {
+      trx.push({
+        tanggal: item.tanggal || new Date().toISOString().slice(0,10),
+        jenis: 'utang',
+        jumlah: parseFloat(item.total) || 0,
+        keterangan: 'Migrasi data lama'
+      });
+    }
+    (item.pembayaran || []).forEach(p => {
+      trx.push({
+        tanggal: p.tanggal || new Date().toISOString().slice(0,10),
+        jenis: 'bayar',
+        jumlah: parseFloat(p.jumlah) || 0,
+        keterangan: p.keterangan || 'Migrasi data lama'
+      });
+    });
+    return { nama: item.nama, transaksi: trx };
+  });
 }
 
 function updateStatus() {
@@ -474,7 +426,6 @@ function updateStatus() {
   }
 }
 
-/* ========== HITUNG ========== */
 function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
 
 function hitung() {
@@ -513,30 +464,21 @@ function hitung() {
 }
 
 function hitungTotal(item) {
-  return (item.transaksi || [])
-    .filter(t => t.jenis === 'utang')
+  return (item.transaksi || []).filter(t => t.jenis === 'utang')
     .reduce((s, t) => s + (parseFloat(t.jumlah) || 0), 0);
 }
-
 function hitungDibayar(item) {
-  return (item.transaksi || [])
-    .filter(t => t.jenis === 'bayar')
+  return (item.transaksi || []).filter(t => t.jenis === 'bayar')
     .reduce((s, t) => s + (parseFloat(t.jumlah) || 0), 0);
 }
-
-function hitungSisa(item) {
-  return hitungTotal(item) - hitungDibayar(item);
-}
-
+function hitungSisa(item) { return hitungTotal(item) - hitungDibayar(item); }
 function hitungStatus(item) {
   const sisa = hitungSisa(item);
   if (sisa <= 0) return { label:'Lunas', class:'status-lunas' };
   return { label:'Aktif', class:'status-aktif' };
 }
-
 function rupiah(n) { return 'Rp' + Math.round(n || 0).toLocaleString('id-ID'); }
 
-/* ========== RENDER TABEL ========== */
 function renderAll() {
   renderPiutangUtang('piutang');
   renderPiutangUtang('utang');
@@ -571,23 +513,22 @@ function renderLoss() {
     tbody.innerHTML = `<tr><td colspan="4" class="empty">Belum ada data kerugian</td></tr>`;
     return;
   }
-  tbody.innerHTML = data.map((item, i) => {
-    return `<tr>
+  tbody.innerHTML = data.map((item, i) => `
+    <tr>
       <td class="nama">${escapeHtml(item.nama)}</td>
       <td class="angka">${rupiah(item.nilai)}</td>
       <td>${item.tanggal || '-'}</td>
       <td><button class="btn-hist" onclick="openHist('loss', ${i})">📜</button></td>
-    </tr>`;
-  }).join('');
+    </tr>
+  `).join('');
 }
 
 function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-/* ========== MODAL TAMBAH ========== */
 function openTambah(jenis) {
-  editMode = { jenis, index: null };
+  editMode = { jenis, index: null, mode: 'tambah' };
   const titles = { piutang:'Tambah Piutang', utang:'Tambah Utang', loss:'Tambah Kerugian' };
   document.getElementById('modal-tambah-title').textContent = titles[jenis];
 
@@ -611,10 +552,10 @@ function openTambah(jenis) {
   document.getElementById('m_tanggal').valueAsDate = new Date();
   openModal('modal-tambah');
 }
+
 function submitTambah() {
   const { jenis, index, mode } = editMode;
 
-  // MODE TAMBAH TRANSAKSI (dari modal history)
   if (mode === 'tambahTransaksi') {
     const jumlah = parseFloat(document.getElementById('t_jumlah').value) || 0;
     if (!jumlah) { toast('Jumlah wajib diisi!', 'error'); return; }
@@ -634,13 +575,40 @@ function submitTambah() {
     return;
   }
 
-  // MODE TAMBAH BIASA
   const nama = document.getElementById('m_nama').value.trim();
   if (!nama) { toast('Nama wajib diisi!', 'error'); return; }
 
   if (jenis === 'piutang' || jenis === 'utang') {
     const total = parseFloat(document.getElementById('m_total').value) || 0;
     if (!total) { toast('Jumlah wajib diisi!', 'error'); return; }
+
+    const existingIndex = state[jenis].findIndex(
+      item => item.nama.toLowerCase() === nama.toLowerCase()
+    );
+
+    if (existingIndex !== -1) {
+      const pilihan = confirm(
+        `"${nama}" sudah ada di daftar ${jenis}.\n\n` +
+        `Klik OK = Tambah utang baru ke "${nama}" yang sudah ada\n` +
+        `Klik Cancel = Buat baris baru terpisah`
+      );
+      if (pilihan) {
+        state[jenis][existingIndex].transaksi = state[jenis][existingIndex].transaksi || [];
+        state[jenis][existingIndex].transaksi.push({
+          tanggal: document.getElementById('m_tanggal').value,
+          jenis: 'utang',
+          jumlah: total,
+          keterangan: document.getElementById('m_keterangan').value.trim() || 'Tambah utang baru'
+        });
+        closeModal('modal-tambah');
+        renderAll();
+        hitung();
+        simpan();
+        toast(`✅ Utang baru ditambahkan ke ${nama}`, 'info');
+        return;
+      }
+    }
+
     state[jenis].push({
       nama,
       transaksi: [{
@@ -667,7 +635,6 @@ function submitTambah() {
   simpan();
 }
 
-/* ========== MODAL HISTORY ========== */
 function openHist(jenis, index) {
   const item = state[jenis][index];
   const isLoss = jenis === 'loss';
@@ -710,7 +677,7 @@ function openHist(jenis, index) {
                 ${isBayar ? '-' : '+'}${rupiah(t.jumlah)}
               </td>
               <td>${escapeHtml(t.keterangan || '-')}</td>
-              <td><button class="btn-hist" onclick="hapusTransaksi('${jenis}', ${index}, '${t.tanggal}', ${t.jumlah}, '${t.jenis}')" style="color:var(--danger);">🗑️</button></td>
+              <td><button class="btn-hist" onclick="hapusTransaksi('${jenis}', ${index}, ${ti})" style="color:var(--danger);">🗑️</button></td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -753,23 +720,27 @@ function openTambahTransaksi(jenis, index, tipe) {
   openModal('modal-tambah');
 }
 
-function hapusTransaksi(jenis, index, tanggal, jumlah, tipe) {
+function hapusTransaksi(jenis, index, ti) {
   if (!confirm('Hapus transaksi ini?')) return;
-  const item = state[jenis][index];
-  const idx = item.transaksi.findIndex(t => t.tanggal === tanggal && t.jumlah === jumlah && t.jenis === tipe);
-  if (idx === -1) return;
-  item.transaksi.splice(idx, 1);
+  state[jenis][index].transaksi.splice(ti, 1);
   renderAll();
   hitung();
   simpan();
   openHist(jenis, index);
 }
 
-/* ========== MODAL CONTROL ========== */
+function hapusItem(jenis, index) {
+  if (!confirm(`Yakin hapus ${jenis} ini? Semua transaksi akan hilang.`)) return;
+  state[jenis].splice(index, 1);
+  closeModal('modal-hist');
+  renderAll();
+  hitung();
+  simpan();
+}
+
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-/* ========== SIMPAN ========== */
 async function simpan() {
   hitung();
   const snapshot = {
@@ -799,7 +770,6 @@ async function simpan() {
   }
 }
 
-/* ========== HISTORY ========== */
 function renderHistory() {
   const el = document.getElementById('history');
   if (!state.history || state.history.length === 0) {
@@ -851,7 +821,6 @@ async function hapusHist(i) {
   toast('🗑️ Riwayat dihapus');
 }
 
-/* ========== EXPORT / IMPORT ========== */
 function exportJSON() {
   hitung();
   const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
@@ -882,7 +851,6 @@ async function hapusSemua() {
   location.reload();
 }
 
-/* ========== TOAST ========== */
 function toast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -891,13 +859,11 @@ function toast(msg, type = '') {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-/* ========== EXPOSE GLOBAL ========== */
 window.openTambah = openTambah;
 window.submitTambah = submitTambah;
 window.openHist = openHist;
 window.openTambahTransaksi = openTambahTransaksi;
 window.hapusTransaksi = hapusTransaksi;
-window.hapusPembayaran = hapusPembayaran;
 window.hapusItem = hapusItem;
 window.openModal = openModal;
 window.closeModal = closeModal;
