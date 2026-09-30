@@ -128,3 +128,399 @@
   }
 </style>
 </head>
+
+ <body>
+<div class="container">
+
+  <header>
+    <div>
+      <h1>📊 Dashboard Aset Pribadi</h1>
+      <p>Data tersinkron otomatis via Firebase ☁️</p>
+      <div class="status-badge" style="margin-top:8px;">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Menghubungkan...</span>
+      </div>
+    </div>
+    <div class="field" style="min-width:180px;">
+      <label>📅 Tanggal Update</label>
+      <input type="date" id="tanggal">
+    </div>
+  </header>
+
+  <div class="summary">
+    <div class="sum-card s1">
+      <div class="label">Sum 1</div>
+      <div class="value" id="sum1">Rp0</div>
+      <div class="sub">Aset Real + Piutang + Investasi</div>
+    </div>
+    <div class="sum-card s2">
+      <div class="label">Sum 2</div>
+      <div class="value" id="sum2">Rp0</div>
+      <div class="sub">Sum 1 − Utang</div>
+    </div>
+    <div class="sum-card s3">
+      <div class="label">Sum 3</div>
+      <div class="value" id="sum3">Rp0</div>
+      <div class="sub">Sum 2 + Aset Fisik + Aset Loss</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span>💰</span> A. Aset Real</h2>
+    <div class="grid">
+      <div class="field"><label>Konter</label><input type="number" id="konter" placeholder="0"></div>
+      <div class="field"><label>Dana Darurat</label><input type="number" id="dana_darurat" placeholder="0"></div>
+      <div class="field"><label>HandBag</label><input type="number" id="handbag" placeholder="0"></div>
+      <div class="field"><label>Celengan</label><input type="number" id="celengan" placeholder="0"></div>
+      <div class="field"><label>Deposito</label><input type="number" id="deposito" placeholder="0"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span>📈</span> B. Investasi</h2>
+    <div class="grid">
+      <div class="field"><label>Saham</label><input type="number" id="saham" placeholder="0"></div>
+      <div class="field"><label>Reksadana</label><input type="number" id="reksadana" placeholder="0"></div>
+      <div class="field"><label>Emas (gram)</label><input type="number" id="emas_gram" placeholder="0"></div>
+      <div class="field"><label>Harga Emas / gram</label><input type="number" id="emas_harga" placeholder="1300000"></div>
+      <div class="field"><label>Crypto</label><input type="number" id="crypto" placeholder="0"></div>
+      <div class="field"><label>Lain-lain</label><input type="number" id="investasi_lain" placeholder="0"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span>🏠</span> C. Aset Fisik</h2>
+    <div class="grid">
+      <div class="field"><label>Tanah / Rumah</label><input type="number" id="tanah" placeholder="0"></div>
+      <div class="field"><label>Motor</label><input type="number" id="motor" placeholder="0"></div>
+      <div class="field"><label>Mobil</label><input type="number" id="mobil" placeholder="0"></div>
+      <div class="field"><label>Barang Bernilai</label><input type="number" id="barang" placeholder="0"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span>🤝</span> D. Piutang</h2>
+    <div id="piutang-list"></div>
+    <button class="btn-add" onclick="addRow('piutang')">+ Tambah Piutang</button>
+  </div>
+
+  <div class="section">
+    <h2><span>💳</span> E. Utang</h2>
+    <div id="utang-list"></div>
+    <button class="btn-add" onclick="addRow('utang')">+ Tambah Utang</button>
+  </div>
+
+  <div class="section">
+    <h2><span>📉</span> F. Aset Loss (Catatan Sejarah)</h2>
+    <div id="loss-list"></div>
+    <button class="btn-add" onclick="addRow('loss')">+ Tambah Kerugian</button>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" onclick="simpan()">💾 Simpan ke Cloud</button>
+    <button class="btn btn-secondary" onclick="window.print()">🖨️ Print / PDF</button>
+    <button class="btn btn-secondary" onclick="exportJSON()">⬇️ Export JSON</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">⬆️ Import JSON</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="btn btn-danger" onclick="hapusSemua()">🗑️ Reset Semua</button>
+  </div>
+
+  <div class="section" style="margin-top:20px;">
+    <h2><span>🕐</span> Riwayat Update</h2>
+    <div class="history" id="history"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">✅ Tersimpan!</div>
+
+<script type="module">
+ /* ========== FIREBASE ========== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, update }
+  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCqrLCuW7WLIySayp_fXGas_R46GtBp4I",
+  authDomain: "aset-pribadi.firebaseapp.com",
+  databaseURL: "https://aset-pribadi-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "aset-pribadi",
+  storageBucket: "aset-pribadi.firebasestorage.app",
+  messagingSenderId: "434333089080",
+  appId: "1:434333089080:web:f06303b5dbf85a753995cd"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const ROOT = 'aset_pribadi';
+
+/* ========== STATE ========== */
+let state = {
+  fields: {},
+  piutang: [],
+  utang: [],
+  loss: [],
+  history: []
+};
+let isOnline = false;
+
+/* ========== INIT ========== */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('tanggal').valueAsDate = new Date();
+  document.querySelectorAll('input').forEach(inp => inp.addEventListener('input', hitung));
+  initDefaultRows();
+  listenFirebase();
+});
+
+function initDefaultRows() {
+  ['piutang','utang','loss'].forEach(t => {
+    const list = document.getElementById(`${t}-list`);
+    if (list.children.length === 0) addRow(t);
+  });
+}
+
+/* ========== DYNAMIC ROWS ========== */
+function addRow(type, data = {nama:'', nilai:''}) {
+  const container = document.getElementById(`${type}-list`);
+  const div = document.createElement('div');
+  div.className = 'row-item';
+  div.innerHTML = `
+    <div class="field"><label>Nama</label>
+      <input type="text" class="row-nama" value="${data.nama}" placeholder="Nama..."></div>
+    <div class="field"><label>Nilai (Rp)</label>
+      <input type="number" class="row-nilai" value="${data.nilai}" placeholder="0"></div>
+    <button class="btn-del" onclick="this.parentElement.remove(); hitung();">×</button>
+  `;
+  div.querySelectorAll('input').forEach(i => i.addEventListener('input', hitung));
+  container.appendChild(div);
+  hitung();
+}
+
+function getRows(type) {
+  const rows = [];
+  document.querySelectorAll(`#${type}-list .row-item`).forEach(r => {
+    const nama = r.querySelector('.row-nama').value.trim();
+    const nilai = parseFloat(r.querySelector('.row-nilai').value) || 0;
+    if (nama || nilai) rows.push({nama, nilai});
+  });
+  return rows;
+}
+
+/* ========== HITUNG ========== */
+function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function hitung() {
+  const A = getNum('konter') + getNum('dana_darurat') + getNum('handbag')
+          + getNum('celengan') + getNum('deposito');
+  const B = getNum('saham') + getNum('reksadana') + getNum('crypto')
+          + getNum('investasi_lain')
+          + (getNum('emas_gram') * (getNum('emas_harga') || 1300000));
+  const C = getNum('tanah') + getNum('motor') + getNum('mobil') + getNum('barang');
+  const D = getRows('piutang').reduce((s,r) => s + r.nilai, 0);
+  const E = getRows('utang').reduce((s,r) => s + r.nilai, 0);
+  const F = getRows('loss').reduce((s,r) => s + r.nilai, 0);
+
+  const sum1 = A + B + D;
+  const sum2 = sum1 - E;
+  const sum3 = sum2 + C + F;
+
+  document.getElementById('sum1').textContent = rupiah(sum1);
+  document.getElementById('sum2').textContent = rupiah(sum2);
+  document.getElementById('sum3').textContent = rupiah(sum3);
+
+  state.fields = {
+    konter:getNum('konter'), dana_darurat:getNum('dana_darurat'),
+    handbag:getNum('handbag'), celengan:getNum('celengan'), deposito:getNum('deposito'),
+    saham:getNum('saham'), reksadana:getNum('reksadana'),
+    emas_gram:getNum('emas_gram'), emas_harga:getNum('emas_harga') || 1300000,
+    crypto:getNum('crypto'), investasi_lain:getNum('investasi_lain'),
+    tanah:getNum('tanah'), motor:getNum('motor'), mobil:getNum('mobil'), barang:getNum('barang')
+  };
+  state.piutang = getRows('piutang');
+  state.utang = getRows('utang');
+  state.loss = getRows('loss');
+  state.sums = { sum1, sum2, sum3, A, B, C, D, E, F };
+}
+
+function rupiah(n) { return 'Rp' + Math.round(n).toLocaleString('id-ID'); }
+
+/* ========== FIREBASE ========== */
+function listenFirebase() {
+  const dbRef = ref(db, ROOT);
+  onValue(dbRef, (snapshot) => {
+    isOnline = true;
+    updateStatus();
+    const data = snapshot.val();
+    if (data) {
+      applyData(data);
+    }
+  }, (error) => {
+    isOnline = false;
+    updateStatus();
+    console.error(error);
+  });
+}
+
+function applyData(data) {
+  if (data.fields) {
+    Object.entries(data.fields).forEach(([k,v]) => {
+      const el = document.getElementById(k);
+      if (el) el.value = v || '';
+    });
+  }
+  ['piutang','utang','loss'].forEach(t => {
+    document.getElementById(`${t}-list`).innerHTML = '';
+    (data[t] || []).forEach(r => addRow(t, r));
+    if (!data[t] || data[t].length === 0) addRow(t);
+  });
+  state.history = data.history || [];
+  if (data.tanggal) document.getElementById('tanggal').value = data.tanggal;
+  hitung();
+  renderHistory();
+}
+
+function updateStatus() {
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  if (isOnline) {
+    dot.className = 'status-dot online';
+    txt.textContent = 'Terhubung ke Cloud';
+  } else {
+    dot.className = 'status-dot offline';
+    txt.textContent = 'Offline — cek internet';
+  }
+}
+
+/* ========== SIMPAN ========== */
+async function simpan() {
+  hitung();
+  const snapshot = {
+    tanggal: document.getElementById('tanggal').value,
+    timestamp: new Date().toISOString(),
+    data: JSON.parse(JSON.stringify(state))
+  };
+  state.history = state.history || [];
+  state.history.unshift(snapshot);
+  if (state.history.length > 100) state.history.pop();
+
+  try {
+    await set(ref(db, ROOT), {
+      fields: state.fields,
+      piutang: state.piutang,
+      utang: state.utang,
+      loss: state.loss,
+      history: state.history,
+      tanggal: document.getElementById('tanggal').value,
+      lastUpdate: new Date().toISOString()
+    });
+    renderHistory();
+    toast('✅ Tersimpan ke Cloud!');
+  } catch (err) {
+    console.error(err);
+    toast('❌ Gagal simpan: ' + err.message, 'error');
+  }
+}
+
+/* ========== HISTORY ========== */
+function renderHistory() {
+  const el = document.getElementById('history');
+  if (!state.history || state.history.length === 0) {
+    el.innerHTML = '<div class="empty">Belum ada riwayat. Klik "Simpan ke Cloud" untuk mulai mencatat.</div>';
+    return;
+  }
+  el.innerHTML = state.history.map((h, i) => `
+    <div class="hist-item">
+      <div>
+        <div class="date">📅 ${h.tanggal || '-'} · ${new Date(h.timestamp).toLocaleString('id-ID')}</div>
+        <div style="margin-top:4px;font-size:.8rem;color:var(--muted);">
+          Sum1: ${rupiah(h.data?.sums?.sum1 || 0)} · Sum2: ${rupiah(h.data?.sums?.sum2 || 0)}
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div class="val">${rupiah(h.data?.sums?.sum3 || 0)}</div>
+        <div class="actions-hist" style="margin-top:6px;">
+          <button onclick="restoreHist(${i})">↺ Restore</button>
+          <button onclick="hapusHist(${i})">🗑️</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function restoreHist(i) {
+  if (!confirm('Restore snapshot ini? Data saat ini akan tertimpa.')) return;
+  const h = state.history[i];
+  if (h.data?.fields) {
+    Object.entries(h.data.fields).forEach(([k,v]) => {
+      const el = document.getElementById(k);
+      if (el) el.value = v || '';
+    });
+  }
+  ['piutang','utang','loss'].forEach(t => {
+    document.getElementById(`${t}-list`).innerHTML = '';
+    (h.data?.[t] || []).forEach(r => addRow(t, r));
+  });
+  if (h.tanggal) document.getElementById('tanggal').value = h.tanggal;
+  hitung();
+  toast('↺ Snapshot di-restore! Klik Simpan untuk update cloud.', 'info');
+}
+
+async function hapusHist(i) {
+  if (!confirm('Hapus riwayat ini?')) return;
+  state.history.splice(i, 1);
+  await update(ref(db, ROOT), { history: state.history });
+  renderHistory();
+  toast('🗑️ Riwayat dihapus');
+}
+
+/* ========== EXPORT / IMPORT ========== */
+function exportJSON() {
+  hitung();
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `aset-pribadi-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('⬇️ File ter-download!');
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      applyData(data);
+      toast('⬆️ Data di-import! Klik Simpan untuk update cloud.', 'info');
+    } catch(err) { alert('File tidak valid!'); }
+  };
+  reader.readAsText(file);
+}
+
+async function hapusSemua() {
+  if (!confirm('⚠️ Hapus SEMUA data dari cloud? Tidak bisa dibatalkan.')) return;
+  await set(ref(db, ROOT), null);
+  location.reload();
+}
+
+/* ========== TOAST ========== */
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ========== EXPOSE GLOBAL ========== */
+window.addRow = addRow;
+window.simpan = simpan;
+window.exportJSON = exportJSON;
+window.importJSON = importJSON;
+window.hapusSemua = hapusSemua;
+window.restoreHist = restoreHist;
+window.hapusHist = hapusHist;
+</script>
+</body>
+</html>
