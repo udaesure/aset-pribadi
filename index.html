@@ -429,6 +429,32 @@ function applyData(data) {
   state.piutang = data.piutang || [];
   state.utang = data.utang || [];
   state.loss = data.loss || [];
+   // AUTO MIGRATE DATA LAMA
+  ['piutang', 'utang'].forEach(j => {
+    state[j] = (state[j] || []).map(item => {
+      // Kalau udah punya transaksi, skip
+      if (item.transaksi) return item;
+      // Convert dari format lama
+      const trx = [];
+      if (item.total) {
+        trx.push({
+          tanggal: item.tanggal || new Date().toISOString().slice(0,10),
+          jenis: 'utang',
+          jumlah: parseFloat(item.total) || 0,
+          keterangan: 'Migrasi data lama'
+        });
+      }
+      (item.pembayaran || []).forEach(p => {
+        trx.push({
+          tanggal: p.tanggal || new Date().toISOString().slice(0,10),
+          jenis: 'bayar',
+          jumlah: parseFloat(p.jumlah) || 0,
+          keterangan: p.keterangan || 'Migrasi data lama'
+        });
+      });
+      return { nama: item.nama, transaksi: trx };
+    });
+  });
   state.history = data.history || [];
   if (data.tanggal) document.getElementById('tanggal').value = data.tanggal;
   hitung();
@@ -486,19 +512,25 @@ function hitung() {
   state.sums = { sum1, sum2, sum3, A, B, C, D, E, F };
 }
 
+function hitungTotal(item) {
+  return (item.transaksi || [])
+    .filter(t => t.jenis === 'utang')
+    .reduce((s, t) => s + (parseFloat(t.jumlah) || 0), 0);
+}
+
+function hitungDibayar(item) {
+  return (item.transaksi || [])
+    .filter(t => t.jenis === 'bayar')
+    .reduce((s, t) => s + (parseFloat(t.jumlah) || 0), 0);
+}
+
 function hitungSisa(item) {
-  const total = parseFloat(item.total) || 0;
-  const dibayar = (item.pembayaran || []).reduce((s, p) => s + (parseFloat(p.jumlah) || 0), 0);
-  return total - dibayar;
+  return hitungTotal(item) - hitungDibayar(item);
 }
 
 function hitungStatus(item) {
   const sisa = hitungSisa(item);
   if (sisa <= 0) return { label:'Lunas', class:'status-lunas' };
-  if (item.jatuhTempo) {
-    const jt = new Date(item.jatuhTempo);
-    if (new Date() > jt) return { label:'Telat', class:'status-telat' };
-  }
   return { label:'Aktif', class:'status-aktif' };
 }
 
@@ -519,11 +551,12 @@ function renderPiutangUtang(jenis) {
     return;
   }
   tbody.innerHTML = data.map((item, i) => {
+    const total = hitungTotal(item);
     const sisa = hitungSisa(item);
     const status = hitungStatus(item);
     return `<tr>
       <td class="nama">${escapeHtml(item.nama)}</td>
-      <td class="angka">${rupiah(item.total)}</td>
+      <td class="angka">${rupiah(total)}</td>
       <td class="angka">${rupiah(sisa)}</td>
       <td><span class="status-pill ${status.class}">${status.label}</span></td>
       <td><button class="btn-hist" onclick="openHist('${jenis}', ${i})">📜</button></td>
@@ -562,9 +595,8 @@ function openTambah(jenis) {
   if (jenis === 'piutang' || jenis === 'utang') {
     body = `
       <div class="field" style="margin-bottom:12px;"><label>Nama</label><input type="text" id="m_nama" placeholder="Nama orang/entitas"></div>
-      <div class="field" style="margin-bottom:12px;"><label>Total (Rp)</label><input type="number" id="m_total" placeholder="0"></div>
-      <div class="field" style="margin-bottom:12px;"><label>Tanggal Dibuat</label><input type="date" id="m_tanggal"></div>
-      <div class="field" style="margin-bottom:12px;"><label>Jatuh Tempo (opsional)</label><input type="date" id="m_jatuhTempo"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Jumlah Utang Awal (Rp)</label><input type="number" id="m_total" placeholder="0"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Tanggal</label><input type="date" id="m_tanggal"></div>
       <div class="field"><label>Keterangan (opsional)</label><textarea id="m_keterangan" rows="2"></textarea></div>
     `;
   } else {
@@ -579,24 +611,26 @@ function openTambah(jenis) {
   document.getElementById('m_tanggal').valueAsDate = new Date();
   openModal('modal-tambah');
 }
-
 function submitTambah() {
   const { jenis, index, mode } = editMode;
 
-  // MODE PEMBAYARAN
-  if (mode === 'pembayaran') {
-    const jumlah = parseFloat(document.getElementById('p_jumlah').value) || 0;
+  // MODE TAMBAH TRANSAKSI (dari modal history)
+  if (mode === 'tambahTransaksi') {
+    const jumlah = parseFloat(document.getElementById('t_jumlah').value) || 0;
     if (!jumlah) { toast('Jumlah wajib diisi!', 'error'); return; }
-    state[jenis][index].pembayaran = state[jenis][index].pembayaran || [];
-    state[jenis][index].pembayaran.push({
-      tanggal: document.getElementById('p_tanggal').value,
+    const jenisTrx = document.getElementById('t_jenis').value;
+    state[jenis][index].transaksi = state[jenis][index].transaksi || [];
+    state[jenis][index].transaksi.push({
+      tanggal: document.getElementById('t_tanggal').value,
+      jenis: jenisTrx,
       jumlah,
-      keterangan: document.getElementById('p_keterangan').value.trim()
+      keterangan: document.getElementById('t_keterangan').value.trim()
     });
     closeModal('modal-tambah');
     renderAll();
     hitung();
     simpan();
+    setTimeout(() => openHist(jenis, index), 300);
     return;
   }
 
@@ -606,14 +640,15 @@ function submitTambah() {
 
   if (jenis === 'piutang' || jenis === 'utang') {
     const total = parseFloat(document.getElementById('m_total').value) || 0;
-    if (!total) { toast('Total wajib diisi!', 'error'); return; }
+    if (!total) { toast('Jumlah wajib diisi!', 'error'); return; }
     state[jenis].push({
       nama,
-      total,
-      tanggal: document.getElementById('m_tanggal').value,
-      jatuhTempo: document.getElementById('m_jatuhTempo').value,
-      keterangan: document.getElementById('m_keterangan').value.trim(),
-      pembayaran: []
+      transaksi: [{
+        tanggal: document.getElementById('m_tanggal').value,
+        jenis: 'utang',
+        jumlah: total,
+        keterangan: document.getElementById('m_keterangan').value.trim()
+      }]
     });
   } else {
     const nilai = parseFloat(document.getElementById('m_nilai').value) || 0;
@@ -636,8 +671,7 @@ function submitTambah() {
 function openHist(jenis, index) {
   const item = state[jenis][index];
   const isLoss = jenis === 'loss';
-  const title = isLoss ? `📜 Riwayat — ${item.nama}` : `📜 Riwayat — ${item.nama}`;
-  document.getElementById('modal-hist-title').textContent = title;
+  document.getElementById('modal-hist-title').textContent = `📜 Riwayat — ${item.nama}`;
 
   let body = '';
   if (isLoss) {
@@ -652,29 +686,33 @@ function openHist(jenis, index) {
       </div>
     `;
   } else {
+    const total = hitungTotal(item);
+    const dibayar = hitungDibayar(item);
     const sisa = hitungSisa(item);
-    const dibayar = (item.pembayaran || []).reduce((s,p) => s + (parseFloat(p.jumlah)||0), 0);
+    const trx = (item.transaksi || []).slice().sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
+
     body = `
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
-        <div><div style="font-size:.7rem;color:var(--muted);">Total</div><div style="font-weight:700;">${rupiah(item.total)}</div></div>
+        <div><div style="font-size:.7rem;color:var(--muted);">Total Utang</div><div style="font-weight:700;">${rupiah(total)}</div></div>
         <div><div style="font-size:.7rem;color:var(--muted);">Dibayar</div><div style="font-weight:700;color:var(--success);">${rupiah(dibayar)}</div></div>
         <div><div style="font-size:.7rem;color:var(--muted);">Sisa</div><div style="font-weight:700;color:var(--warn);">${rupiah(sisa)}</div></div>
       </div>
-      <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px;">
-        Dibuat: ${item.tanggal || '-'} ${item.jatuhTempo ? ' · Jatuh tempo: ' + item.jatuhTempo : ''}
-      </div>
       <table style="font-size:.8rem;">
-        <thead><tr><th>Tanggal</th><th>Jumlah</th><th>Ket.</th><th></th></tr></thead>
+        <thead><tr><th>Tanggal</th><th>Jenis</th><th>Jumlah</th><th>Ket.</th><th></th></tr></thead>
         <tbody>
-          ${(item.pembayaran || []).length === 0 ? '<tr><td colspan="4" class="empty">Belum ada pembayaran</td></tr>' : ''}
-          ${(item.pembayaran || []).map((p, pi) => `
-            <tr>
-              <td>${p.tanggal || '-'}</td>
-              <td>${rupiah(p.jumlah)}</td>
-              <td>${escapeHtml(p.keterangan || '-')}</td>
-              <td><button class="btn-hist" onclick="hapusPembayaran('${jenis}', ${index}, ${pi})" style="color:var(--danger);">🗑️</button></td>
-            </tr>
-          `).join('')}
+          ${trx.length === 0 ? '<tr><td colspan="5" class="empty">Belum ada transaksi</td></tr>' : ''}
+          ${trx.map((t, ti) => {
+            const isBayar = t.jenis === 'bayar';
+            return `<tr>
+              <td>${t.tanggal || '-'}</td>
+              <td>${isBayar ? '🟢 Bayar' : '🟡 Utang'}</td>
+              <td style="color:${isBayar ? 'var(--success)' : 'var(--text)'};">
+                ${isBayar ? '-' : '+'}${rupiah(t.jumlah)}
+              </td>
+              <td>${escapeHtml(t.keterangan || '-')}</td>
+              <td><button class="btn-hist" onclick="hapusTransaksi('${jenis}', ${index}, '${t.tanggal}', ${t.jumlah}, '${t.jenis}')" style="color:var(--danger);">🗑️</button></td>
+            </tr>`;
+          }).join('')}
         </tbody>
       </table>
     `;
@@ -685,7 +723,8 @@ function openHist(jenis, index) {
   if (!isLoss) {
     footer = `
       <button class="btn btn-danger btn-sm" onclick="hapusItem('${jenis}', ${index})">🗑️ Hapus ${jenis}</button>
-      <button class="btn btn-success btn-sm" onclick="openCatatPembayaran('${jenis}', ${index})">💰 Catat Pembayaran</button>
+      <button class="btn btn-success btn-sm" onclick="openTambahTransaksi('${jenis}', ${index}, 'utang')">+ Tambah Utang</button>
+      <button class="btn btn-primary btn-sm" onclick="openTambahTransaksi('${jenis}', ${index}, 'bayar')">💰 Catat Pembayaran</button>
     `;
   } else {
     footer = `<button class="btn btn-danger btn-sm" onclick="hapusItem('${jenis}', ${index})">🗑️ Hapus</button>`;
@@ -695,40 +734,35 @@ function openHist(jenis, index) {
   openModal('modal-hist');
 }
 
-function openCatatPembayaran(jenis, index) {
+function openTambahTransaksi(jenis, index, tipe) {
   const item = state[jenis][index];
   const sisa = hitungSisa(item);
+  const isBayar = tipe === 'bayar';
+
   const body = `
-    <div style="margin-bottom:12px;font-size:.85rem;">
-      Sisa saat ini: <strong style="color:var(--warn);">${rupiah(sisa)}</strong>
-    </div>
-    <div class="field" style="margin-bottom:12px;"><label>Tanggal Pembayaran</label><input type="date" id="p_tanggal"></div>
-    <div class="field" style="margin-bottom:12px;"><label>Jumlah (Rp)</label><input type="number" id="p_jumlah" placeholder="0" max="${sisa}"></div>
-    <div class="field"><label>Keterangan (opsional)</label><input type="text" id="p_keterangan" placeholder="contoh: Transfer BCA"></div>
+    ${isBayar ? `<div style="margin-bottom:12px;font-size:.85rem;">Sisa saat ini: <strong style="color:var(--warn);">${rupiah(sisa)}</strong></div>` : ''}
+    <input type="hidden" id="t_jenis" value="${tipe}">
+    <div class="field" style="margin-bottom:12px;"><label>Tanggal</label><input type="date" id="t_tanggal"></div>
+    <div class="field" style="margin-bottom:12px;"><label>Jumlah (Rp)</label><input type="number" id="t_jumlah" placeholder="0"></div>
+    <div class="field"><label>Keterangan (opsional)</label><input type="text" id="t_keterangan" placeholder="${isBayar ? 'contoh: Transfer BCA' : 'contoh: Pinjam lagi'}"></div>
   `;
-  document.getElementById('modal-tambah-title').textContent = '💰 Catat Pembayaran';
+  document.getElementById('modal-tambah-title').textContent = isBayar ? `💰 Catat Pembayaran — ${item.nama}` : `+ Tambah Utang — ${item.nama}`;
   document.getElementById('modal-tambah-body').innerHTML = body;
-  document.getElementById('p_tanggal').valueAsDate = new Date();
-  editMode = { jenis, index, mode: 'pembayaran' };
+  document.getElementById('t_tanggal').valueAsDate = new Date();
+  editMode = { jenis, index, mode: 'tambahTransaksi' };
   openModal('modal-tambah');
 }
 
-function hapusPembayaran(jenis, index, pi) {
-  if (!confirm('Hapus pembayaran ini?')) return;
-  state[jenis][index].pembayaran.splice(pi, 1);
+function hapusTransaksi(jenis, index, tanggal, jumlah, tipe) {
+  if (!confirm('Hapus transaksi ini?')) return;
+  const item = state[jenis][index];
+  const idx = item.transaksi.findIndex(t => t.tanggal === tanggal && t.jumlah === jumlah && t.jenis === tipe);
+  if (idx === -1) return;
+  item.transaksi.splice(idx, 1);
   renderAll();
   hitung();
   simpan();
   openHist(jenis, index);
-}
-
-function hapusItem(jenis, index) {
-  if (!confirm(`Yakin hapus ${jenis} ini?`)) return;
-  state[jenis].splice(index, 1);
-  closeModal('modal-hist');
-  renderAll();
-  hitung();
-  simpan();
 }
 
 /* ========== MODAL CONTROL ========== */
@@ -861,7 +895,8 @@ function toast(msg, type = '') {
 window.openTambah = openTambah;
 window.submitTambah = submitTambah;
 window.openHist = openHist;
-window.openCatatPembayaran = openCatatPembayaran;
+window.openTambahTransaksi = openTambahTransaksi;
+window.hapusTransaksi = hapusTransaksi;
 window.hapusPembayaran = hapusPembayaran;
 window.hapusItem = hapusItem;
 window.openModal = openModal;
