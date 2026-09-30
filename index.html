@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 Dashboard Aset Pribadi</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
+  :root{
+    --bg:#0f1220; --card:#1a1f35; --card2:#232a45; --accent:#6c8cff;
+    --accent2:#8b5cf6; --success:#22c55e; --danger:#ef4444; --warn:#f59e0b;
+    --text:#e8ecf5; --muted:#8b93ab; --border:#2a3152;
+  }
+  body{ background:var(--bg); color:var(--text); min-height:100vh; padding:20px; }
+  .container{ max-width:1200px; margin:0 auto; }
+
+  /* HEADER */
+  header{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    padding:24px; border-radius:16px; margin-bottom:20px;
+    box-shadow:0 10px 30px rgba(108,140,255,.25);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
+  }
+  header h1{ font-size:1.6rem; }
+  header p{ opacity:.9; font-size:.85rem; margin-top:4px; }
+
+  /* SUMMARY CARDS */
+  .summary{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:20px; }
+  .sum-card{
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:18px; position:relative; overflow:hidden;
+    transition:transform .2s;
+  }
+  .sum-card:hover{ transform:translateY(-3px); }
+  .sum-card::before{
+    content:''; position:absolute; top:0; left:0; width:4px; height:100%;
+  }
+  .sum-card.s1::before{ background:var(--accent); }
+  .sum-card.s2::before{ background:var(--warn); }
+  .sum-card.s3::before{ background:var(--success); }
+  .sum-card .label{ font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+  .sum-card .value{ font-size:1.4rem; font-weight:700; margin-top:6px; }
+  .sum-card .sub{ font-size:.75rem; color:var(--muted); margin-top:4px; }
+
+  /* FORM SECTIONS */
+  .section{
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:20px; margin-bottom:16px;
+  }
+  .section h2{
+    font-size:1rem; margin-bottom:14px; display:flex; align-items:center; gap:8px;
+    color:var(--accent);
+  }
+  .section h2 span{ font-size:1.2rem; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+  .field{ display:flex; flex-direction:column; gap:4px; }
+  .field label{ font-size:.75rem; color:var(--muted); }
+  .field input{
+    background:var(--card2); border:1px solid var(--border); border-radius:8px;
+    padding:10px 12px; color:var(--text); font-size:.9rem; outline:none;
+    transition:border .2s;
+  }
+  .field input:focus{ border-color:var(--accent); }
+  .field input[type="date"]{ color-scheme:dark; }
+
+  /* ROW PIUTANG/UTANG */
+  .row-item{ display:grid; grid-template-columns:1fr 1fr 40px; gap:8px; margin-bottom:8px; align-items:end; }
+  .row-item input{ width:100%; background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:10px; color:var(--text); }
+  .btn-del{
+    background:var(--danger); border:none; color:white; border-radius:8px;
+    width:40px; height:42px; cursor:pointer; font-size:1.1rem;
+  }
+  .btn-add{
+    background:var(--card2); border:1px dashed var(--border); color:var(--muted);
+    padding:10px; border-radius:8px; cursor:pointer; width:100%; margin-top:6px;
+    transition:.2s;
+  }
+  .btn-add:hover{ color:var(--accent); border-color:var(--accent); }
+
+  /* ACTIONS */
+  .actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+  .btn{
+    padding:12px 20px; border:none; border-radius:10px; cursor:pointer;
+    font-weight:600; font-size:.9rem; transition:.2s; display:flex; align-items:center; gap:6px;
+  }
+  .btn-primary{ background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 8px 20px rgba(108,140,255,.35); }
+  .btn-secondary{ background:var(--card2); color:var(--text); border:1px solid var(--border); }
+  .btn-secondary:hover{ border-color:var(--accent); }
+  .btn-danger{ background:var(--danger); color:white; }
+
+  /* HISTORY */
+  .history{ max-height:400px; overflow-y:auto; }
+  .hist-item{
+    background:var(--card2); border-left:3px solid var(--accent);
+    border-radius:8px; padding:12px; margin-bottom:8px;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;
+    font-size:.85rem;
+  }
+  .hist-item .date{ color:var(--muted); font-size:.75rem; }
+  .hist-item .val{ font-weight:700; color:var(--success); }
+  .hist-item .actions-hist{ display:flex; gap:6px; }
+  .hist-item button{
+    background:transparent; border:1px solid var(--border); color:var(--muted);
+    border-radius:6px; padding:4px 8px; cursor:pointer; font-size:.75rem;
+  }
+  .hist-item button:hover{ color:var(--accent); border-color:var(--accent); }
+
+  /* TOAST */
+  .toast{
+    position:fixed; bottom:30px; right:30px; background:var(--success);
+    color:white; padding:14px 22px; border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+    transform:translateY(100px); opacity:0; transition:.3s;
+  }
+  .toast.show{ transform:translateY(0); opacity:1; }
+
+  .empty{ text-align:center; color:var(--muted); padding:20px; font-size:.85rem; }
+
+  @media print{
+    body{ background:white; color:black; }
+    .actions, .btn-add, .btn-del, .history, header p{ display:none; }
+    .section, .sum-card{ border:1px solid #ccc; background:white; color:black; }
+    .field input{ background:white; color:black; border:1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <h1>📊 Dashboard Aset Pribadi</h1>
+      <p>Catat, simpan, dan pantau kekayaanmu setiap saat</p>
+    </div>
+    <div class="field" style="min-width:180px;">
+      <label>📅 Tanggal Update</label>
+      <input type="date" id="tanggal">
+    </div>
+  </header>
+
+  <!-- SUMMARY -->
+  <div class="summary">
+    <div class="sum-card s1">
+      <div class="label">Sum 1</div>
+      <div class="value" id="sum1">Rp0</div>
+      <div class="sub">Aset Real + Piutang + Investasi</div>
+    </div>
+    <div class="sum-card s2">
+      <div class="label">Sum 2</div>
+      <div class="value" id="sum2">Rp0</div>
+      <div class="sub">Sum 1 − Utang</div>
+    </div>
+    <div class="sum-card s3">
+      <div class="label">Sum 3</div>
+      <div class="value" id="sum3">Rp0</div>
+      <div class="sub">Sum 2 + Aset Fisik + Aset Loss</div>
+    </div>
+  </div>
+
+  <!-- A. ASET REAL -->
+  <div class="section">
+    <h2><span>💰</span> A. Aset Real</h2>
+    <div class="grid">
+      <div class="field"><label>Konter</label><input type="number" id="konter" placeholder="0"></div>
+      <div class="field"><label>Dana Darurat</label><input type="number" id="dana_darurat" placeholder="0"></div>
+      <div class="field"><label>HandBag</label><input type="number" id="handbag" placeholder="0"></div>
+      <div class="field"><label>Celengan</label><input type="number" id="celengan" placeholder="0"></div>
+      <div class="field"><label>Deposito</label><input type="number" id="deposito" placeholder="0"></div>
+    </div>
+  </div>
+
+  <!-- B. INVESTASI -->
+  <div class="section">
+    <h2><span>📈</span> B. Investasi</h2>
+    <div class="grid">
+      <div class="field"><label>Saham</label><input type="number" id="saham" placeholder="0"></div>
+      <div class="field"><label>Reksadana</label><input type="number" id="reksadana" placeholder="0"></div>
+      <div class="field"><label>Emas (gram)</label><input type="number" id="emas_gram" placeholder="0"></div>
+      <div class="field"><label>Harga Emas / gram</label><input type="number" id="emas_harga" placeholder="1300000"></div>
+      <div class="field"><label>Crypto</label><input type="number" id="crypto" placeholder="0"></div>
+      <div class="field"><label>Lain-lain</label><input type="number" id="investasi_lain" placeholder="0"></div>
+    </div>
+  </div>
+
+  <!-- C. ASET FISIK -->
+  <div class="section">
+    <h2><span>🏠</span> C. Aset Fisik</h2>
+    <div class="grid">
+      <div class="field"><label>Tanah / Rumah</label><input type="number" id="tanah" placeholder="0"></div>
+      <div class="field"><label>Motor</label><input type="number" id="motor" placeholder="0"></div>
+      <div class="field"><label>Mobil</label><input type="number" id="mobil" placeholder="0"></div>
+      <div class="field"><label>Barang Bernilai</label><input type="number" id="barang" placeholder="0"></div>
+    </div>
+  </div>
+
+  <!-- D. PIUTANG -->
+  <div class="section">
+    <h2><span>🤝</span> D. Piutang</h2>
+    <div id="piutang-list"></div>
+    <button class="btn-add" onclick="addRow('piutang')">+ Tambah Piutang</button>
+  </div>
+
+  <!-- E. UTANG -->
+  <div class="section">
+    <h2><span>💳</span> E. Utang</h2>
+    <div id="utang-list"></div>
+    <button class="btn-add" onclick="addRow('utang')">+ Tambah Utang</button>
+  </div>
+
+  <!-- F. ASET LOSS -->
+  <div class="section">
+    <h2><span>📉</span> F. Aset Loss (Catatan Sejarah)</h2>
+    <div id="loss-list"></div>
+    <button class="btn-add" onclick="addRow('loss')">+ Tambah Kerugian</button>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn btn-primary" onclick="simpan()">💾 Simpan Snapshot</button>
+    <button class="btn btn-secondary" onclick="window.print()">🖨️ Print / PDF</button>
+    <button class="btn btn-secondary" onclick="exportJSON()">⬇️ Export JSON</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">⬆️ Import JSON</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="btn btn-danger" onclick="hapusSemua()">🗑️ Reset Semua</button>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="section" style="margin-top:20px;">
+    <h2><span>🕐</span> Riwayat Update</h2>
+    <div class="history" id="history"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">✅ Tersimpan!</div>
+
+<script>
+/* ====================== STATE ====================== */
+const STORAGE_KEY = 'aset_pribadi_data';
+let state = {
+  fields: {},
+  piutang: [],
+  utang: [],
+  loss: [],
+  history: []
+};
+
+/* ====================== INIT ====================== */
+document.addEventListener('DOMContentLoaded', () => {
+  load();
+  document.getElementById('tanggal').valueAsDate = new Date();
+
+  // auto-save on input change
+  document.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', () => { hitung(); });
+  });
+
+  hitung();
+  renderHistory();
+});
+
+/* ====================== DYNAMIC ROWS ====================== */
+function addRow(type, data = {nama:'', nilai:''}) {
+  const container = document.getElementById(`${type}-list`);
+  const div = document.createElement('div');
+  div.className = 'row-item';
+  div.innerHTML = `
+    <div class="field">
+      <label>Nama</label>
+      <input type="text" class="row-nama" value="${data.nama}" placeholder="Nama...">
+    </div>
+    <div class="field">
+      <label>Nilai (Rp)</label>
+      <input type="number" class="row-nilai" value="${data.nilai}" placeholder="0">
+    </div>
+    <button class="btn-del" onclick="this.parentElement.remove(); hitung();">×</button>
+  `;
+  div.querySelectorAll('input').forEach(i => i.addEventListener('input', hitung));
+  container.appendChild(div);
+  hitung();
+}
+
+function getRows(type) {
+  const rows = [];
+  document.querySelectorAll(`#${type}-list .row-item`).forEach(r => {
+    const nama = r.querySelector('.row-nama').value.trim();
+    const nilai = parseFloat(r.querySelector('.row-nilai').value) || 0;
+    if (nama || nilai) rows.push({nama, nilai});
+  });
+  return rows;
+}
+
+/* ====================== HITUNG ====================== */
+function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function hitung() {
+  // A
+  const A = getNum('konter') + getNum('dana_darurat') + getNum('handbag')
+          + getNum('celengan') + getNum('deposito');
+  // B
+  const B = getNum('saham') + getNum('reksadana') + getNum('crypto')
+          + getNum('investasi_lain')
+          + (getNum('emas_gram') * (getNum('emas_harga') || 1300000));
+  // C
+  const C = getNum('tanah') + getNum('motor') + getNum('mobil') + getNum('barang');
+  // D
+  const D = getRows('piutang').reduce((s,r) => s + r.nilai, 0);
+  // E
+  const E = getRows('utang').reduce((s,r) => s + r.nilai, 0);
+  // F
+  const F = getRows('loss').reduce((s,r) => s + r.nilai, 0);
+
+  const sum1 = A + B + D;
+  const sum2 = sum1 - E;
+  const sum3 = sum2 + C + F;
+
+  document.getElementById('sum1').textContent = rupiah(sum1);
+  document.getElementById('sum2').textContent = rupiah(sum2);
+  document.getElementById('sum3').textContent = rupiah(sum3);
+
+  // update state
+  state.fields = {
+    konter:getNum('konter'), dana_darurat:getNum('dana_darurat'),
+    handbag:getNum('handbag'), celengan:getNum('celengan'), deposito:getNum('deposito'),
+    saham:getNum('saham'), reksadana:getNum('reksadana'),
+    emas_gram:getNum('emas_gram'), emas_harga:getNum('emas_harga') || 1300000,
+    crypto:getNum('crypto'), investasi_lain:getNum('investasi_lain'),
+    tanah:getNum('tanah'), motor:getNum('motor'), mobil:getNum('mobil'), barang:getNum('barang')
+  };
+  state.piutang = getRows('piutang');
+  state.utang = getRows('utang');
+  state.loss = getRows('loss');
+  state.sums = { sum1, sum2, sum3, A, B, C, D, E, F };
+}
+
+function rupiah(n) {
+  return 'Rp' + Math.round(n).toLocaleString('id-ID');
+}
+
+/* ====================== SAVE / LOAD ====================== */
+function simpan() {
+  hitung();
+  const snapshot = {
+    tanggal: document.getElementById('tanggal').value,
+    timestamp: new Date().toISOString(),
+    data: JSON.parse(JSON.stringify(state))
+  };
+  state.history.unshift(snapshot);
+  if (state.history.length > 100) state.history.pop();
+
+  save();
+  renderHistory();
+  toast('✅ Snapshot tersimpan!');
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function load() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) {
+    // default empty rows
+    addRow('piutang'); addRow('utang'); addRow('loss');
+    return;
+  }
+  try {
+    const saved = JSON.parse(raw);
+    state = Object.assign(state, saved);
+
+    // isi field
+    Object.entries(state.fields || {}).forEach(([k,v]) => {
+      const el = document.getElementById(k);
+      if (el) el.value = v || '';
+    });
+
+    // isi rows
+    ['piutang','utang','loss'].forEach(t => {
+      const list = document.getElementById(`${t}-list`);
+      list.innerHTML = '';
+      (state[t] || []).forEach(r => addRow(t, r));
+      if (!state[t] || state[t].length === 0) addRow(t);
+    });
+  } catch(e) { console.error(e); }
+}
+
+/* ====================== HISTORY ====================== */
+function renderHistory() {
+  const el = document.getElementById('history');
+  if (!state.history || state.history.length === 0) {
+    el.innerHTML = '<div class="empty">Belum ada riwayat. Klik "Simpan Snapshot" untuk mulai mencatat.</div>';
+    return;
+  }
+  el.innerHTML = state.history.map((h, i) => `
+    <div class="hist-item">
+      <div>
+        <div class="date">📅 ${h.tanggal || '-'} · ${new Date(h.timestamp).toLocaleString('id-ID')}</div>
+        <div style="margin-top:4px;font-size:.8rem;color:var(--muted);">
+          Sum1: ${rupiah(h.data.sums?.sum1 || 0)} · Sum2: ${rupiah(h.data.sums?.sum2 || 0)}
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div class="val">${rupiah(h.data.sums?.sum3 || 0)}</div>
+        <div class="actions-hist" style="margin-top:6px;">
+          <button onclick="restoreHist(${i})">↺ Restore</button>
+          <button onclick="hapusHist(${i})">🗑️</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function restoreHist(i) {
+  if (!confirm('Restore snapshot ini? Data saat ini akan tertimpa.')) return;
+  const h = state.history[i];
+  // reset form dulu
+  document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => el.value = '');
+  // isi fields
+  Object.entries(h.data.fields || {}).forEach(([k,v]) => {
+    const el = document.getElementById(k);
+    if (el) el.value = v || '';
+  });
+  // isi rows
+  ['piutang','utang','loss'].forEach(t => {
+    document.getElementById(`${t}-list`).innerHTML = '';
+    (h.data[t] || []).forEach(r => addRow(t, r));
+  });
+  if (h.tanggal) document.getElementById('tanggal').value = h.tanggal;
+  hitung();
+  toast('↺ Snapshot di-restore!');
+}
+
+function hapusHist(i) {
+  if (!confirm('Hapus riwayat ini?')) return;
+  state.history.splice(i, 1);
+  save();
+  renderHistory();
+  toast('🗑️ Riwayat dihapus');
+}
+
+/* ====================== EXPORT / IMPORT ====================== */
+function exportJSON() {
+  hitung();
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `aset-pribadi-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  toast('⬇️ File ter-download!');
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      state = data;
+      save();
+      location.reload();
+    } catch(err) { alert('File tidak valid!'); }
+  };
+  reader.readAsText(file);
+}
+
+function hapusSemua() {
+  if (!confirm('⚠️ Hapus SEMUA data termasuk riwayat? Tindakan ini tidak bisa dibatalkan.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+/* ====================== TOAST ====================== */
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>
